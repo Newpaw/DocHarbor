@@ -119,6 +119,23 @@ docker compose up --build
 
 Persistent data is stored under [`data/`](/home/jnovopacky/project/scraper_v2/data).
 
+## Docker only
+
+If you want to run DocHarbor without Docker Compose:
+
+```bash
+cp .env.example .env
+mkdir -p data
+docker build -t docharbor .
+docker run --rm \
+  -p 8000:8000 \
+  --env-file .env \
+  -v "$(pwd)/data:/app/data" \
+  docharbor
+```
+
+Open `http://localhost:8000`.
+
 ## Tests
 
 ```bash
