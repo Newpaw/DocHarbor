@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Pages | DocHarbor{% endblock %}
+{% block content %}
+<section class="panel">
+  <p class="eyebrow">Page Detail</p>
+  <h1>Processed pages for job {{ job.id }}</h1>
+  <div class="stack">
+    {% for page in pages %}
+      <article class="panel nested-panel">
+        <h2>{{ page.title or page.source_url }}</h2>
+        <p><strong>Source:</strong> <a href="{{ page.source_url }}" target="_blank" rel="noreferrer">{{ page.source_url }}</a></p>
+        <p><strong>Status:</strong> {{ page.status }} · <strong>Depth:</strong> {{ page.depth }} · <strong>Words:</strong> {{ page.word_count }}</p>
+        <p><strong>Content type:</strong> {{ page.content_type or 'unknown' }}</p>
+        <p><strong>Notes:</strong> {{ page.extraction_notes or 'n/a' }}</p>
+        {% if page.markdown_path %}
+          <details>
+            <summary>Stored markdown path</summary>
+            <code>{{ page.markdown_path }}</code>
+          </details>
+        {% endif %}
+      </article>
+    {% else %}
+      <p class="muted">No pages stored.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

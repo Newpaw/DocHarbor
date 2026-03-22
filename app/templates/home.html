@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Start | DocHarbor{% endblock %}
+{% block content %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">Documentation Acquisition</p>
+    <h1>Find the right docs, inspect the source, export clean Markdown.</h1>
+    <p class="lede">This MVP is designed for local AI workflows. Discovery is optional, overrides are explicit, outputs stay tied to a reproducible job record, and you can organize runs with tags.</p>
+  </div>
+  <div class="cap-grid">
+    <div class="cap-card {{ 'available' if capabilities.brave_available else 'unavailable' }}">
+      <span>Brave Search</span>
+      <strong>{{ 'Available' if capabilities.brave_available else 'Unavailable' }}</strong>
+    </div>
+    <div class="cap-card {{ 'available' if capabilities.openai_available else 'unavailable' }}">
+      <span>OpenAI Assist</span>
+      <strong>{{ 'Available' if capabilities.openai_available else 'Unavailable' }}</strong>
+    </div>
+    <div class="cap-card {{ 'available' if capabilities.playwright_available else 'unavailable' }}">
+      <span>JS Fallback</span>
+      <strong>{{ 'Enabled' if capabilities.playwright_available else 'Disabled' }}</strong>
+    </div>
+  </div>
+</section>
+
+{% if error %}
+<section class="panel error-panel">{{ error }}</section>
+{% endif %}
+
+<section class="grid two-up">
+  <section class="panel">
+    <p class="eyebrow">How Keys Are Used</p>
+    <h2>Brave Search API key</h2>
+    <p>The app uses Brave only during the discovery step when you enter a software name without a direct documentation URL.</p>
+    <p>It does not use Brave for crawling pages, exporting Markdown, or downloading final artifacts.</p>
+    <p>To stay within the free tier, discovery uses a small query budget, prefers <code>official docs</code> style searches, caches repeated lookups, and degrades gracefully on rate limits.</p>
+  </section>
+  <section class="panel">
+    <p class="eyebrow">Optional LLM Assist</p>
+    <h2>OpenAI API key</h2>
+    <p>The app uses OpenAI only when deterministic inspection is ambiguous. The current MVP uses it as an optional fallback for uncertain source-type classification.</p>
+    <p>OpenAI is not required for crawling, HTML extraction, Markdown conversion, manifest generation, or ZIP export.</p>
+    <p>If the key is missing or the client cannot initialize, the app continues in deterministic mode.</p>
+  </section>
+</section>
+
+<section class="grid two-up">
+  <form class="panel form-panel" action="/discover" method="post">
+    <h2>Start a Job</h2>
+    <label>
+      <span>Software name</span>
+      <input type="text" name="software_name" placeholder="FastAPI, LangChain, OpenAI API">
+    </label>
+    <label>
+      <span>Direct documentation URL</span>
+      <input type="url" name="input_url" placeholder="https://fastapi.tiangolo.com/">
+    </label>
+    <label>
+      <span>Notes or search hints</span>
+      <textarea name="user_notes" rows="3" placeholder="Optional context for later review"></textarea>
+    </label>
+    <label>
+      <span>Tags</span>
+      <input type="text" name="tags" placeholder="voice, api, rag">
+    </label>
+    <div class="inline-fields">
+      <label>
+        <span>Max depth</span>
+        <input type="number" min="0" max="6" name="max_depth" value="{{ defaults.default_max_depth }}">
+      </label>
+      <label>
+        <span>Max pages</span>
+        <input type="number" min="1" max="500" name="max_pages" value="{{ defaults.default_max_pages }}">
+      </label>
+      <label>
+        <span>Output mode</span>
+        <select name="output_mode">
+          <option value="compiled_only">Compiled markdown only</option>
+          <option value="compiled_and_pages">Compiled + per-page files</option>
+          <option value="full_package">Full package + ZIP</option>
+        </select>
+      </label>
+    </div>
+    <div class="check-row">
+      <label><input type="checkbox" name="same_domain_only" checked> Same-domain only</label>
+      <label><input type="checkbox" name="js_fallback_enabled" {% if defaults.enable_playwright_fallback %}checked{% endif %}> Enable JS fallback</label>
+    </div>
+    <button class="button primary" type="submit">Discover documentation</button>
+  </form>
+
+  <section class="panel">
+    <h2>Recent Jobs</h2>
+    {% if active_tag %}
+      <p class="muted">Filtering by tag: <span class="pill">{{ active_tag }}</span> <a href="/">Clear</a></p>
+    {% endif %}
+    {% if all_tags %}
+      <div class="tag-row">
+        {% for tag_name in all_tags %}
+          <a class="pill" href="/?tag={{ tag_name }}">{{ tag_name }}</a>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% if jobs %}
+      <div class="list">
+        {% for job in jobs %}
+          <a class="list-item" href="/jobs/{{ job.id }}">
+            <div>
+              <strong>{{ job.software_name or job.selected_source_url or job.input_url or ('Job ' ~ job.id) }}</strong>
+              <small>{{ job.status }} · {{ job.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+              {% if job.tags %}
+                <div class="tag-row">
+                  {% for tag_name in job.tags %}
+                    <span class="pill">{{ tag_name }}</span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            <span class="pill">{{ job.final_strategy or job.proposed_strategy or 'pending' }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">No jobs yet.</p>
+    {% endif %}
+  </section>
+</section>
+{% endblock %}

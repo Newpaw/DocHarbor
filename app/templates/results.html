@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Results | DocHarbor{% endblock %}
+{% block content %}
+<section class="panel">
+  <p class="eyebrow">Completed Job</p>
+  <h1>{{ job.software_name or job.selected_source_url or ('Job ' ~ job.id) }}</h1>
+  {% if job.tags %}
+    <div class="tag-row">
+      {% for tag_name in job.tags %}
+        <a class="pill" href="/jobs?tag={{ tag_name }}">{{ tag_name }}</a>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <p class="lede">The compiled Markdown file is the primary output. Per-page files and a ZIP package are available when the selected mode produced them.</p>
+  <div class="action-row">
+    <a class="button primary" href="/jobs/{{ job.id }}/download/compiled">Download compiled markdown</a>
+    <a class="button" href="/jobs/{{ job.id }}/download/manifest">Download manifest</a>
+    {% if job.zip_path %}
+      <a class="button" href="/jobs/{{ job.id }}/download/zip">Download ZIP package</a>
+    {% endif %}
+    <a class="button" href="/jobs/{{ job.id }}/pages">Inspect pages</a>
+    <a class="button" href="/jobs/{{ job.id }}/logs">View logs</a>
+  </div>
+  <form class="form-panel compact-form" action="/jobs/{{ job.id }}/tags" method="post">
+    <input type="hidden" name="redirect_to" value="/jobs/{{ job.id }}">
+    <label>
+      <span>Tags</span>
+      <input type="text" name="tags" value="{{ job.tags|join(', ') }}" placeholder="voice, api, rag">
+    </label>
+    <button class="button" type="submit">Save tags</button>
+  </form>
+  <form action="/jobs/{{ job.id }}/delete" method="post">
+    <input type="hidden" name="redirect_to" value="/jobs">
+    <button class="button danger" type="submit">Delete job</button>
+  </form>
+</section>
+
+<section class="grid two-up">
+  <section class="panel">
+    <h2>Summary</h2>
+    <div class="stats">
+      <div><span>Status</span><strong>{{ job.status }}</strong></div>
+      <div><span>Source type</span><strong>{{ job.selected_source_type or 'n/a' }}</strong></div>
+      <div><span>Strategy</span><strong>{{ job.final_strategy or 'n/a' }}</strong></div>
+      <div><span>Pages</span><strong>{{ job.pages_processed }}</strong></div>
+      <div><span>Warnings</span><strong>{{ job.warning_count }}</strong></div>
+      <div><span>Failures</span><strong>{{ job.failure_count }}</strong></div>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Artifacts</h2>
+    <p><strong>Compiled:</strong> {{ job.compiled_markdown_path or 'n/a' }}</p>
+    <p><strong>Manifest:</strong> {{ job.manifest_path or 'n/a' }}</p>
+    <p><strong>ZIP:</strong> {{ job.zip_path or 'not generated' }}</p>
+  </section>
+</section>
+
+<section class="panel">
+  <h2>Processed pages</h2>
+  <div class="list">
+    {% for page in pages %}
+      <div class="list-item static">
+        <div>
+          <strong>{{ page.title or page.source_url }}</strong>
+          <small>{{ page.source_url }}</small>
+        </div>
+        <span class="pill">{{ page.word_count }} words</span>
+      </div>
+    {% else %}
+      <p class="muted">No pages were stored.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

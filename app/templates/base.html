@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}DocHarbor{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    {% block head %}{% endblock %}
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="/">
+          <span class="brand-mark">DH</span>
+          <span>
+            <strong>DocHarbor</strong>
+            <small>Local-first documentation acquisition</small>
+          </span>
+        </a>
+        <nav class="nav">
+          <a href="/">Start</a>
+          <a href="/jobs">History</a>
+          <a href="/api/capabilities">API</a>
+        </nav>
+      </header>
+
+      <main class="content">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </body>
+</html>

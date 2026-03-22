@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}History | DocHarbor{% endblock %}
+{% block content %}
+<section class="panel">
+  <p class="eyebrow">Job History</p>
+  <h1>All jobs</h1>
+  <form class="filter-bar" action="/jobs" method="get">
+    <input type="text" name="tag" value="{{ active_tag or '' }}" placeholder="Filter by tag">
+    <button class="button" type="submit">Filter</button>
+    {% if active_tag %}
+      <a class="button" href="/jobs">Clear</a>
+    {% endif %}
+  </form>
+  {% if all_tags %}
+    <div class="tag-row">
+      {% for tag_name in all_tags %}
+        <a class="pill" href="/jobs?tag={{ tag_name }}">{{ tag_name }}</a>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <div class="list">
+    {% for job in jobs %}
+      <div class="list-item static">
+        <div>
+          <a href="/jobs/{{ job.id }}"><strong>{{ job.software_name or job.selected_source_url or job.input_url or ('Job ' ~ job.id) }}</strong></a>
+          <small>{{ job.created_at.strftime('%Y-%m-%d %H:%M') }} · {{ job.selected_source_type or 'pending type' }}</small>
+          {% if job.tags %}
+            <div class="tag-row">
+              {% for tag_name in job.tags %}
+                <a class="pill" href="/jobs?tag={{ tag_name }}">{{ tag_name }}</a>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+        <div class="action-row">
+          <span class="pill">{{ job.status }}</span>
+          <form action="/jobs/{{ job.id }}/delete" method="post">
+            <input type="hidden" name="redirect_to" value="/jobs{% if active_tag %}?tag={{ active_tag }}{% endif %}">
+            <button class="button danger" type="submit">Delete</button>
+          </form>
+        </div>
+      </div>
+    {% else %}
+      <p class="muted">No jobs recorded.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

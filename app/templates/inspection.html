@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Inspection | DocHarbor{% endblock %}
+{% block content %}
+<section class="grid two-up">
+  <section class="panel">
+    <p class="eyebrow">Inspection</p>
+    <h1>Source analysis for job {{ job.id }}</h1>
+    <p><strong>Selected URL:</strong> <a href="{{ inspection.normalized_url }}" target="_blank" rel="noreferrer">{{ inspection.normalized_url }}</a></p>
+    <p><strong>Detected type:</strong> {{ inspection.detected_source_type }}</p>
+    <p><strong>Recommended strategy:</strong> {{ inspection.recommended_ingestion_strategy }}</p>
+    <p><strong>Confidence:</strong> {{ '%.0f'|format(inspection.confidence * 100) }}%</p>
+    <h2>Signals</h2>
+    <ul class="simple-list">
+      {% for item in inspection.reasoning %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <form class="panel form-panel" action="/jobs/{{ job.id }}/process" method="post">
+    <h2>Confirm or override</h2>
+    <label>
+      <span>Source type</span>
+      <select name="source_type">
+        {% for value in ['multi_page_docs', 'single_page_html', 'pdf', 'markdown', 'plain_text', 'unknown'] %}
+          <option value="{{ value }}" {% if value == inspection.detected_source_type %}selected{% endif %}>{{ value }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>
+      <span>Processing strategy</span>
+      <select name="final_strategy">
+        {% for value in ['multi_page_docs', 'single_page_html', 'pdf', 'markdown', 'plain_text'] %}
+          <option value="{{ value }}" {% if value == inspection.recommended_ingestion_strategy %}selected{% endif %}>{{ value }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>
+      <span>Crawl prefix</span>
+      <input type="url" name="crawl_prefix" value="{{ inspection.recommended_crawl_prefix or job.crawl_prefix or '' }}">
+    </label>
+    <div class="inline-fields">
+      <label>
+        <span>Max depth</span>
+        <input type="number" min="0" max="6" name="max_depth" value="{{ job.max_depth }}">
+      </label>
+      <label>
+        <span>Max pages</span>
+        <input type="number" min="1" max="500" name="max_pages" value="{{ job.max_pages }}">
+      </label>
+      <label>
+        <span>Output mode</span>
+        <select name="output_mode">
+          {% for mode in ['compiled_only', 'compiled_and_pages', 'full_package'] %}
+            <option value="{{ mode }}" {% if job.output_mode == mode %}selected{% endif %}>{{ mode }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
+    <div class="check-row">
+      <label><input type="checkbox" name="same_domain_only" {% if job.same_domain_only %}checked{% endif %}> Same-domain only</label>
+      <label><input type="checkbox" name="js_fallback_enabled" {% if job.js_fallback_enabled %}checked{% endif %}> Enable JS fallback</label>
+    </div>
+    <button class="button primary" type="submit">Process source</button>
+  </form>
+</section>
+{% endblock %}

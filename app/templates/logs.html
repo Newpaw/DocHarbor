@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Logs | DocHarbor{% endblock %}
+{% block content %}
+<section class="panel">
+  <p class="eyebrow">Logs and Warnings</p>
+  <h1>Job {{ job.id }}</h1>
+  <div class="log-list">
+    {% for event in events %}
+      <div class="log-item">
+        <span class="pill">{{ event.level }}</span>
+        <strong>{{ event.event_type }}</strong>
+        <p>{{ event.message }}</p>
+        <small>{{ event.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+        {% if event.related_url %}
+          <a href="{{ event.related_url }}" target="_blank" rel="noreferrer">{{ event.related_url }}</a>
+        {% endif %}
+      </div>
+    {% else %}
+      <p class="muted">No log events available.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Discovery | DocHarbor{% endblock %}
+{% block content %}
+<section class="panel">
+  <p class="eyebrow">Discovery Results</p>
+  <h1>{{ job.software_name or 'Documentation Candidates' }}</h1>
+  <p class="lede">Review the ranked candidates. The app does not silently choose one for you.</p>
+</section>
+
+{% if error %}
+<section class="panel error-panel">{{ error }}</section>
+{% endif %}
+
+<section class="stack">
+  {% for candidate in candidates %}
+    <form class="panel candidate-card" action="/jobs/{{ job.id }}/inspect" method="post">
+      <input type="hidden" name="candidate_id" value="{{ candidate.id }}">
+      <div class="candidate-meta">
+        <div>
+          <h2>{{ candidate.title }}</h2>
+          <p class="muted">{{ candidate.domain }}</p>
+          <a href="{{ candidate.url }}" target="_blank" rel="noreferrer">{{ candidate.url }}</a>
+        </div>
+        <div class="score-box">
+          <span>Confidence</span>
+          <strong>{{ '%.0f'|format(candidate.confidence_score * 100) }}%</strong>
+        </div>
+      </div>
+      <p>{{ candidate.reason }}</p>
+      <div class="tag-row">
+        <span class="pill">{{ candidate.likely_source_type }}</span>
+        <span class="pill">{{ 'official' if candidate.appears_official else 'unverified' }}</span>
+      </div>
+      <button class="button primary" type="submit">Inspect source</button>
+    </form>
+  {% endfor %}
+</section>
+{% endblock %}

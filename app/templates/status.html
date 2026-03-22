@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Job {{ job.id }} | DocHarbor{% endblock %}
+{% block head %}
+{% if job.status not in ['completed', 'failed'] %}
+<meta http-equiv="refresh" content="4">
+{% endif %}
+{% endblock %}
+{% block content %}
+<section class="grid two-up">
+  <section class="panel">
+    <p class="eyebrow">Job Status</p>
+    <h1>{{ job.software_name or job.selected_source_url or ('Job ' ~ job.id) }}</h1>
+    {% if job.tags %}
+      <div class="tag-row">
+        {% for tag_name in job.tags %}
+          <a class="pill" href="/jobs?tag={{ tag_name }}">{{ tag_name }}</a>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <div class="progress-shell">
+      <div class="progress-meta">
+        <strong>{{ progress.headline }}</strong>
+        <span>{{ progress.percent }}%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: {{ progress.percent }}%"></div>
+      </div>
+      <small>{{ progress.processed }} processed{% if progress.total %} / {{ progress.total }} expected{% endif %}</small>
+    </div>
+    <div class="stage-strip">
+      {% for stage in progress.stages %}
+        <div class="stage-chip {{ stage.state }}">
+          <span>{{ stage.label }}</span>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="stats">
+      <div><span>Status</span><strong>{{ job.status }}</strong></div>
+      <div><span>Discovered</span><strong>{{ job.pages_discovered }}</strong></div>
+      <div><span>Processed</span><strong>{{ job.pages_processed }}</strong></div>
+      <div><span>Warnings</span><strong>{{ job.warning_count }}</strong></div>
+      <div><span>Failures</span><strong>{{ job.failure_count }}</strong></div>
+    </div>
+    <p class="muted">This page refreshes automatically while the job is active.</p>
+  </section>
+  <section class="panel">
+    <h2>Selected Source</h2>
+    <p><strong>URL:</strong> {{ job.selected_source_url or job.input_url or 'n/a' }}</p>
+    <p><strong>Source type:</strong> {{ job.selected_source_type or 'pending' }}</p>
+    <p><strong>Strategy:</strong> {{ job.final_strategy or job.proposed_strategy or 'pending' }}</p>
+    <p><strong>Crawl prefix:</strong> {{ job.crawl_prefix or 'n/a' }}</p>
+    <form class="form-panel compact-form" action="/jobs/{{ job.id }}/tags" method="post">
+      <input type="hidden" name="redirect_to" value="/jobs/{{ job.id }}">
+      <label>
+        <span>Tags</span>
+        <input type="text" name="tags" value="{{ job.tags|join(', ') }}" placeholder="voice, api, rag">
+      </label>
+      <button class="button" type="submit">Save tags</button>
+    </form>
+    <form action="/jobs/{{ job.id }}/delete" method="post">
+      <input type="hidden" name="redirect_to" value="/jobs">
+      <button class="button danger" type="submit">Delete job</button>
+    </form>
+  </section>
+</section>
+
+<section class="grid two-up">
+  <section class="panel">
+    <h2>Intermediate Results</h2>
+    {% if page_previews %}
+      <div class="preview-grid">
+        {% for preview in page_previews %}
+          <article class="preview-card">
+            <div class="preview-top">
+              <strong>{{ preview.title }}</strong>
+              <span class="pill">{{ preview.word_count }} words</span>
+            </div>
+            <small>{{ preview.url }}</small>
+            <p>{{ preview.excerpt }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">No page content has been stored yet. Refresh will show previews as pages finish processing.</p>
+    {% endif %}
+  </section>
+  <section class="panel">
+    <h2>Warnings and Errors</h2>
+    {% if warning_events or error_events %}
+      <div class="log-list">
+        {% for event in error_events + warning_events %}
+          <div class="log-item">
+            <span class="pill">{{ event.level }}</span>
+            <strong>{{ event.event_type }}</strong>
+            <p>{{ event.message }}</p>
+            {% if event.related_url %}<a href="{{ event.related_url }}" target="_blank" rel="noreferrer">{{ event.related_url }}</a>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">No warnings or errors recorded so far.</p>
+    {% endif %}
+  </section>
+</section>
+
+<section class="panel">
+  <h2>Recent events</h2>
+  <div class="log-list">
+    {% for event in events %}
+      <div class="log-item">
+        <span class="pill">{{ event.level }}</span>
+        <strong>{{ event.event_type }}</strong>
+        <p>{{ event.message }}</p>
+        {% if event.related_url %}<a href="{{ event.related_url }}" target="_blank" rel="noreferrer">{{ event.related_url }}</a>{% endif %}
+      </div>
+    {% else %}
+      <p class="muted">No events yet.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
